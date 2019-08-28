@@ -1,0 +1,20 @@
+---
+name: Install and Publish
+on: push
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@1.0.0
+      - name: install
+        uses: actions/npm@v2.0.0
+        run: npm ci
+      - name: test
+      - name: publish
+        uses: expo/expo-github-action@refactor/update-action
+        with:
+          args: publish example
+        env:
+          EXPO_CLI_USERNAME: ${{ secrets.EXPO_CLI_USERNAME }}
+          EXPO_CLI_PASSWORD: ${{ secrets.EXPO_CLI_PASSWORD }}
