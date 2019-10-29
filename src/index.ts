@@ -4,17 +4,17 @@ import { install } from './install';
 import { patchWatchers } from './system';
 
 export async function run() {
-	const path = await install(
+	const { path, bin } = await install(
 		getInput('expo-version') || 'latest',
 		getInput('expo-packager') || 'npm',
 	);
 
 	addPath(path);
 
-	await authenticate(
-		getInput('expo-username'),
-		getInput('expo-password'),
-	);
+	await authenticate(bin, {
+		username: getInput('expo-username'),
+		password: getInput('expo-password'),
+	});
 
 	const shouldPatchWatchers = getInput('expo-patch-watchers') || 'true';
 

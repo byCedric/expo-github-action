@@ -46,7 +46,10 @@ function install(version, packager) {
             root = yield fromPackager(exact, packager);
             root = yield toCache(exact, root);
         }
-        return path.join(root, 'node_modules', '.bin');
+        return {
+            path: path.join(root, 'node_modules', '.bin'),
+            bin: path.join(root, 'node_modules', '.bin', 'expo'),
+        };
     });
 }
 exports.install = install;

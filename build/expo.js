@@ -23,13 +23,13 @@ const cli = __importStar(require("@actions/exec"));
  * This step is required for publishing and building new apps.
  * It uses the `EXPO_CLI_PASSWORD` environment variable for improved security.
  */
-function authenticate(username, password) {
+function authenticate(bin, options) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!username || !password) {
+        if (!options.username || !options.password) {
             return core.debug('Skipping authentication, `expo-username` and/or `expo-password` not set...');
         }
-        yield cli.exec('expo', ['login', `--username=${username}`], {
-            env: Object.assign(Object.assign({}, process.env), { EXPO_CLI_PASSWORD: password }),
+        yield cli.exec(bin, ['login', `--username=${options.username}`], {
+            env: Object.assign(Object.assign({}, process.env), { EXPO_CLI_PASSWORD: options.password }),
         });
     });
 }

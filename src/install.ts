@@ -29,7 +29,10 @@ export async function install(version: string, packager: string) {
 		root = await toCache(exact, root);
 	}
 
-	return path.join(root, 'node_modules', '.bin');
+	return {
+		path: path.join(root, 'node_modules', '.bin'),
+		bin: path.join(root, 'node_modules', '.bin', 'expo'),
+	};
 }
 
 /**

@@ -22,7 +22,10 @@ describe('install', () => {
 	test('installs path from cache', async () => {
 		cache.find.mockResolvedValue('/cache/path');
 		const expoPath = await install.install('3.0.10', 'npm');
-		expect(expoPath).toBe('/cache/path/node_modules/.bin');
+		expect(expoPath).toMatchObject({
+			path: '/cache/path/node_modules/.bin',
+			bin: '/cache/path/node_modules/.bin/expo',
+		});
 	});
 
 	test('installs path from packager and cache it', async () => {
@@ -30,8 +33,11 @@ describe('install', () => {
 		cache.find.mockResolvedValue(undefined);
 		cache.cacheDir.mockResolvedValue('/cache/path');
 		const expoPath = await install.install('3.0.10', 'npm');
-		expect(expoPath).toBe('/cache/path/node_modules/.bin');
 		expect(cache.cacheDir).toBeCalledWith('/temp/path', 'expo-cli', '3.0.10');
+		expect(expoPath).toMatchObject({
+			path: '/cache/path/node_modules/.bin',
+			bin: '/cache/path/node_modules/.bin/expo',
+		});
 	});
 });
 
