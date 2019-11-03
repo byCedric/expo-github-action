@@ -16,6 +16,7 @@ const key = 'T1-win32-x64-node-12-yarn-expo-cli-3.4.1';
  */
 export async function fromCache(version: string) {
 	let root = toolCache.find('expo-cli', version);
+	let cacheEntry: ArtifactCacheEntry;
 
 	if (root) {
 		return root;
@@ -24,7 +25,12 @@ export async function fromCache(version: string) {
 		root = path.join(cacheRoot, 'expo-cli', '3.4.1', os.arch());
 	}
 
-	const cacheEntry = await _getCacheEntry([key]);
+	try {
+		cacheEntry = await _getCacheEntry([key]);
+	} catch {
+		return '';
+	}
+
 	const archiveFile = await toolCache.downloadTool(cacheEntry.archiveLocation!);
 
 	await toolCache.extractTar(archiveFile, root);

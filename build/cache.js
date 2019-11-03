@@ -36,6 +36,7 @@ const key = 'T1-win32-x64-node-12-yarn-expo-cli-3.4.1';
 function fromCache(version) {
     return __awaiter(this, void 0, void 0, function* () {
         let root = toolCache.find('expo-cli', version);
+        let cacheEntry;
         if (root) {
             return root;
         }
@@ -43,7 +44,12 @@ function fromCache(version) {
             const cacheRoot = process.env['RUNNER_TOOL_CACHE'] || '';
             root = path_1.default.join(cacheRoot, 'expo-cli', '3.4.1', os_1.default.arch());
         }
-        const cacheEntry = yield _getCacheEntry([key]);
+        try {
+            cacheEntry = yield _getCacheEntry([key]);
+        }
+        catch (_a) {
+            return '';
+        }
         const archiveFile = yield toolCache.downloadTool(cacheEntry.archiveLocation);
         yield toolCache.extractTar(archiveFile, root);
         core.saveState('CACHE_KEY', key);
