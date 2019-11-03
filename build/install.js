@@ -16,10 +16,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const cache = __importStar(require("@actions/tool-cache"));
 const cli = __importStar(require("@actions/exec"));
 const io = __importStar(require("@actions/io"));
 const path = __importStar(require("path"));
+const cache_1 = require("./cache");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const registry = require('libnpm');
 /**
@@ -41,10 +41,10 @@ exports.resolve = resolve;
 function install(version, packager) {
     return __awaiter(this, void 0, void 0, function* () {
         const exact = yield resolve(version);
-        let root = yield fromCache(exact);
+        let root = yield cache_1.fromCache(exact);
         if (!root) {
             root = yield fromPackager(exact, packager);
-            root = yield toCache(exact, root);
+            root = yield cache_1.toCache(exact, root);
         }
         return path.join(root, 'node_modules', '.bin');
     });
@@ -64,27 +64,3 @@ function fromPackager(version, packager) {
     });
 }
 exports.fromPackager = fromPackager;
-/**
- * Get the path to the `expo-cli` from cache, if any.
- * Note, this cache is **NOT** shared between jobs.
- *
- * @see https://github.com/actions/toolkit/issues/47
- */
-function fromCache(version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return cache.find('expo-cli', version);
-    });
-}
-exports.fromCache = fromCache;
-/**
- * Store the root of `expo-cli` in the cache, for future reuse.
- * Note, this cache is **NOT** shared between jobs.
- *
- * @see https://github.com/actions/toolkit/issues/47
- */
-function toCache(version, root) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return cache.cacheDir(root, 'expo-cli', version);
-    });
-}
-exports.toCache = toCache;

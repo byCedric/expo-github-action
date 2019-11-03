@@ -1,7 +1,7 @@
-import * as cache from '@actions/tool-cache';
 import * as cli from '@actions/exec';
 import * as io from '@actions/io';
 import * as path from 'path';
+import { fromCache, toCache } from './cache';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const registry = require('libnpm');
@@ -44,24 +44,4 @@ export async function fromPackager(version: string, packager: string) {
 	await cli.exec(tool, ['add', `expo-cli@${version}`], { cwd: root });
 
 	return root;
-}
-
-/**
- * Get the path to the `expo-cli` from cache, if any.
- * Note, this cache is **NOT** shared between jobs.
- *
- * @see https://github.com/actions/toolkit/issues/47
- */
-export async function fromCache(version: string) {
-	return cache.find('expo-cli', version);
-}
-
-/**
- * Store the root of `expo-cli` in the cache, for future reuse.
- * Note, this cache is **NOT** shared between jobs.
- *
- * @see https://github.com/actions/toolkit/issues/47
- */
-export async function toCache(version: string, root: string) {
-	return cache.cacheDir(root, 'expo-cli', version);
 }
