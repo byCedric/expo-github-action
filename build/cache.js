@@ -26,9 +26,8 @@ const core = __importStar(require("@actions/core"));
 const io = __importStar(require("@actions/io"));
 const cli = __importStar(require("@actions/exec"));
 const toolCache = __importStar(require("@actions/tool-cache"));
-const cacheHttpClient = __importStar(require("@actions/cache/src/cacheHttpClient"));
-const utils = __importStar(require("@actions/cache/src/utils/actionUtils"));
-const constants_1 = require("@actions/cache/src/constants");
+const node_fetch_1 = __importDefault(require("node-fetch"));
+const key = 'T1-win32-x64-node-12-yarn-expo-cli-3.4.1';
 /**
  * Get the path to the `expo-cli` from cache, if any.
  * Before pulling the cache from tool cache, but that's not available cross jobs.
@@ -44,15 +43,11 @@ function fromCache(version) {
             const cacheRoot = process.env['RUNNER_TOOL_CACHE'] || '';
             root = path_1.default.join(cacheRoot, 'expo-cli', '3.4.1', os_1.default.arch());
         }
-        const key = 'win32-node-12-yarn-expo-cli-3.4.1';
-        const archivePath = path_1.default.join(yield utils.createTempDirectory(), 'cache.tgz');
-        const cacheEntry = yield cacheHttpClient.getCacheEntry([key]);
-        yield cacheHttpClient.downloadCache(cacheEntry, archivePath);
-        utils.setCacheState(cacheEntry);
-        yield toolCache.extractTar(archivePath, root);
-        core.saveState(constants_1.State.CacheKey, key);
-        utils.setCacheState(cacheEntry);
-        utils.setCacheHitOutput(utils.isExactKeyMatch(key, cacheEntry));
+        const cacheEntry = yield _getCacheEntry([key]);
+        const archiveFile = yield toolCache.downloadTool(cacheEntry.archiveLocation);
+        yield toolCache.extractTar(archiveFile, root);
+        core.saveState('CACHE_KEY', key);
+        core.saveState('CACHE_RESULT', JSON.stringify(cacheEntry));
         return root;
     });
 }
@@ -64,33 +59,92 @@ exports.fromCache = fromCache;
  */
 function toCache(version, dir) {
     return __awaiter(this, void 0, void 0, function* () {
-        const key = 'win32-node-12-yarn-expo-cli-3.4.1';
         const root = yield toolCache.cacheDir(dir, 'expo-cli', version);
-        if (utils.isExactKeyMatch(key, utils.getCacheState())) {
+        const cacheEntryFromState = JSON.parse(core.getState('CACHE_RESULT'));
+        if (_isExactKeyMatch(key, cacheEntryFromState)) {
             core.info(`Cache hit occured on ${key}, skipping cache...`);
             return root;
         }
         let cachePath = root;
-        let archivePath = path_1.default.join(yield utils.createTempDirectory(), 'cache.tgz');
+        const tempPath = path_1.default.join(process.env['RUNNER_TEMP'] || '', 'expo-cli', '3.4.1', os_1.default.arch());
+        let archiveFile = path_1.default.join(tempPath, 'cache.tgz');
         const args = ['-cz'];
         const IS_WINDOWS = process.platform === 'win32';
         if (IS_WINDOWS) {
             args.push('--force-local');
-            archivePath = archivePath.replace(/\\/g, '/');
+            archiveFile = archiveFile.replace(/\\/g, '/');
             cachePath = cachePath.replace(/\\/g, '/');
         }
-        args.push(...['-f', archivePath, '-C', cachePath, '.']);
+        args.push(...['-f', archiveFile, '-C', cachePath, '.']);
         const tarPath = yield io.which("tar", true);
         yield cli.exec(`"${tarPath}"`, args);
         const fileSizeLimit = 200 * 1024 * 1024; // 200MB
-        const archiveFileSize = fs_1.default.statSync(archivePath).size;
+        const archiveFileSize = fs_1.default.statSync(archiveFile).size;
         if (archiveFileSize > fileSizeLimit) {
             core.warning(`Cache size of ${archiveFileSize} bytes is over the 200MB limit, not saving cache`);
             return root;
         }
-        const stream = fs_1.default.createReadStream(archivePath);
-        yield cacheHttpClient.saveCache(stream, key);
+        yield _saveCacheEntry(key, archiveFile);
         return root;
     });
 }
 exports.toCache = toCache;
+function _isExactKeyMatch(key, cacheResult) {
+    return !!(cacheResult &&
+        cacheResult.cacheKey &&
+        cacheResult.cacheKey.localeCompare(key, undefined, { sensitivity: 'accent' }) === 0);
+}
+function _getCacheUrl() {
+    const cacheUrl = (process.env["ACTIONS_CACHE_URL"] ||
+        process.env["ACTIONS_RUNTIME_URL"] ||
+        "").replace("pipelines", "artifactcache");
+    if (!cacheUrl) {
+        throw new Error('Cache Service Url not found, unable to restore cache');
+    }
+    return cacheUrl;
+}
+function _getCacheEntry(keys) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const cacheUrl = _getCacheUrl();
+        const cachePath = `_apis/artifactcache/cache?keys=${encodeURIComponent(keys.join(','))}`;
+        const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
+        const response = yield node_fetch_1.default(`${cacheUrl}${cachePath}`, {
+            method: 'get',
+            headers: {
+                Accept: 'application/json;api-version=5.2-preview.1',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (response.status === 204) {
+            throw new Error(`Cache not found for keys: ${JSON.stringify(keys)}`);
+        }
+        if (response.status !== 200) {
+            throw new Error(`Cache service responded with ${response.status}`);
+        }
+        const json = yield response.json();
+        if (!json || !json.cacheResult.archiveLocation) {
+            throw new Error('Cache not found');
+        }
+        return json;
+    });
+}
+function _saveCacheEntry(key, archive) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const cacheUrl = _getCacheUrl();
+        const cachePath = `_apis/artifactcache/cache/${encodeURIComponent(key)}`;
+        const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
+        const response = yield node_fetch_1.default(`${cacheUrl}${cachePath}`, {
+            method: 'post',
+            body: fs_1.default.createReadStream(archive),
+            headers: {
+                Accept: 'application/json;api-version=5.2-preview.1',
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/octet-stream',
+            },
+        });
+        if (response.status !== 200) {
+            throw new Error(`Cache service responded with ${response.status}`);
+        }
+        core.info('Cache saved successfully');
+    });
+}
