@@ -41,10 +41,11 @@ exports.resolve = resolve;
 function install(version, packager) {
     return __awaiter(this, void 0, void 0, function* () {
         const exact = yield resolve(version);
-        let root = yield cache_1.fromCache(exact);
+        let root = yield cache_1.fromCache(exact, packager);
         if (!root) {
-            root = yield fromPackager(exact, packager);
-            root = yield cache_1.toCache(exact, root);
+            const installPath = yield fromPackager(exact, packager);
+            const cachePath = yield cache_1.toCache(exact, packager, installPath);
+            root = cachePath || installPath;
         }
         return path.join(root, 'node_modules', '.bin');
     });

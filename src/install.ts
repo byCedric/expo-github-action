@@ -22,11 +22,13 @@ export async function resolve(version: string) {
  */
 export async function install(version: string, packager: string) {
 	const exact = await resolve(version);
-	let root = await fromCache(exact);
+	let root = await fromCache(exact, packager);
 
 	if (!root) {
-		root = await fromPackager(exact, packager)
-		root = await toCache(exact, root);
+		const installPath = await fromPackager(exact, packager);
+		const cachePath = await toCache(exact, packager, installPath);
+
+		root = cachePath || installPath;
 	}
 
 	return path.join(root, 'node_modules', '.bin');
