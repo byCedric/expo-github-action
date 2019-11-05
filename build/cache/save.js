@@ -25,18 +25,25 @@ const os_1 = __importDefault(require("os"));
 const api_1 = require("./api");
 function toCache(version, packager, dir) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`Debug: saving cache for: ${JSON.stringify({ version, packager, dir })}`);
         const key = api_1.getKey(version, packager);
+        core.info(`Debug: cache key: ${key}`);
         const localCachePath = yield toolCache.cacheDir(dir, 'expo-cli', version, os_1.default.arch());
+        core.info(`Debug: local cache path: ${localCachePath}`);
         let remoteCacheResponse;
         try {
             remoteCacheResponse = yield api_1.storeEntry(key, localCachePath);
+            core.info(`Debug: remote cache response: ${JSON.stringify(remoteCacheResponse)}`);
         }
         catch (error) {
             core.setFailed(error.message);
+            core.info(`Debug: remote cache failed: ${error.message}`);
         }
         if (remoteCacheResponse !== null) {
+            core.info(`Debug: remote cache saved from local cache path: ${localCachePath}`);
             return localCachePath;
         }
+        core.info(`Debug: remote cache response empty`);
     });
 }
 exports.toCache = toCache;
