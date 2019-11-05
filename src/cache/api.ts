@@ -82,10 +82,10 @@ function getTemporaryPath() {
 
 /**
  * Validate the archive file to check if we can upload it.
- * The current limitation is 200mb max size.
+ * The current limitation is 400mb max size.
  */
 function validateArchive(archive: string) {
-	const MAX_SIZE = 200 * 1024 * 1024; // 200mb
+	const MAX_SIZE = 400 * 1024 * 1024; // 400mb
 	const archiveSize = fs.statSync(archive).size;
 
 	if (archiveSize > MAX_SIZE) {
