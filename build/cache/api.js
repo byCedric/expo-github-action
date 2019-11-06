@@ -49,7 +49,7 @@ exports.states = {
  */
 function getKey(version, packager) {
     const node = process.version.split('.')[0];
-    return `T1-${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+    return `T2-${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 exports.getKey = getKey;
 /**
@@ -154,7 +154,19 @@ function storeEntry(key, target) {
         if (response.status !== 200) {
             throw new Error(exports.errors.API_ERROR + response.status);
         }
-        const data = yield response.json();
+        let data;
+        try {
+            data = yield response.json();
+        }
+        catch (error) {
+            core.info('Debug: response failed to parse to json');
+            try {
+                core.info(yield response.text());
+            }
+            catch (error) {
+                core.info('Debug: response failed to reading to text');
+            }
+        }
         if (!data || !data.archiveLocation) {
             throw new Error(exports.errors.API_ENTRY_NOT_FOUND + key);
         }

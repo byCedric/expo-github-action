@@ -39,7 +39,7 @@ export const states = {
 export function getKey(version: string, packager: string) {
 	const node = process.version.split('.')[0];
 
-	return `T1-${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+	return `T2-${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 
 /**
@@ -174,7 +174,17 @@ export async function storeEntry(key: string, target: string): Promise<ArtifactC
 		throw new Error(errors.API_ERROR + response.status);
 	}
 
-	const data = await response.json();
+	let data;
+	try {
+		data = await response.json();
+	} catch (error) {
+		core.info('Debug: response failed to parse to json');
+		try {
+			core.info(await response.text());
+		} catch (error) {
+			core.info('Debug: response failed to reading to text');
+		}
+	}
 
 	if (!data || !data.archiveLocation) {
 		throw new Error(errors.API_ENTRY_NOT_FOUND + key);
