@@ -37,10 +37,12 @@ export async function fetchEntry(key: string, target: string) {
 		throw new Error(utils.errors.API_ENTRY_NOT_FOUND + key);
 	}
 
-	const archiveFile = await toolCache.downloadTool(data.archiveLocation);
+	const archiveDownload = await toolCache.downloadTool(data.archiveLocation);
+	const archivePath = utils.getTemporaryPath('cache.tgz');
 
+	await io.mv(archiveDownload, archivePath);
 	await io.mkdirP(target);
-	await toolCache.extractTar(archiveFile, target);
+	await toolCache.extractTar(archivePath, target);
 
 	core.saveState(utils.states.CACHE_ENTRY, JSON.stringify(data));
 

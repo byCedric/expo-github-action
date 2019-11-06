@@ -50,9 +50,11 @@ function fetchEntry(key, target) {
         if (!data || !data.archiveLocation) {
             throw new Error(utils.errors.API_ENTRY_NOT_FOUND + key);
         }
-        const archiveFile = yield toolCache.downloadTool(data.archiveLocation);
+        const archiveDownload = yield toolCache.downloadTool(data.archiveLocation);
+        const archivePath = utils.getTemporaryPath('cache.tgz');
+        yield io.mv(archiveDownload, archivePath);
         yield io.mkdirP(target);
-        yield toolCache.extractTar(archiveFile, target);
+        yield toolCache.extractTar(archivePath, target);
         core.saveState(utils.states.CACHE_ENTRY, JSON.stringify(data));
         return true;
     });
