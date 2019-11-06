@@ -2,28 +2,34 @@ import * as core from '@actions/core';
 import * as toolCache from '@actions/tool-cache';
 import os from 'os';
 import path from 'path';
-import { getKey, fetchEntry } from './api';
+import { Context } from '../context';
+import { fetchEntry } from './api';
+import { getKey } from './utils';
 
-export async function fromCache(version: string, packager: string, remoteCache: boolean) {
-	const localCachePath = toolCache.find('expo-cli', version);
+/**
+ * Restore the context from local or remote cache, when enabled.
+ * It returns the path where the tool was restored, when restored.
+ */
+export async function fromCache(context: Context) {
+	const localCachePath = toolCache.find('expo-cli', context.version);
 
-	core.info(`Debug: restoring cache for: ${JSON.stringify({ version, packager })}`);
-	core.info(`Debug: local cache path: ${localCachePath}`);
+	core.info(`cache: restoring for ${JSON.stringify(context)}`);
+	core.info(`cache: local path ${localCachePath}`);
 
 	if (localCachePath) {
 		return localCachePath;
 	}
 
-	if (!remoteCache) {
+	if (!context.remoteCache) {
 		return;
 	}
 
-	const remoteCacheKey = getKey(version, packager);
-	const remoteCachePath = path.join(process.env['RUNNER_TOOL_CACHE'] || '', 'expo-cli', '3.4.1', os.arch());
+	const remoteCacheKey = getKey(context.version, context.packager);
+	const remoteCachePath = path.join(process.env['RUNNER_TOOL_CACHE'] || '', 'expo-cli', context.version, os.arch());
 	let remoteCacheResponse;
 
-	core.info(`Debug: remote cache key: ${remoteCacheKey}`);
-	core.info(`Debug: remote cache path: ${remoteCachePath}`);
+	core.info(`cache: remote key ${remoteCacheKey}`);
+	core.info(`cache: remote path ${remoteCachePath}`);
 
 	try {
 		remoteCacheResponse = await fetchEntry(remoteCacheKey, remoteCachePath);
@@ -35,5 +41,5 @@ export async function fromCache(version: string, packager: string, remoteCache: 
 		return remoteCachePath;
 	}
 
-	core.info(`Debug: remote cache response empty`);
+	core.info(`cache: remote response empty`);
 }

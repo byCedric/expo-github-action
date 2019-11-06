@@ -1,25 +1,18 @@
-import { addPath, getInput } from '@actions/core';
+import { addPath } from '@actions/core';
+import { getAuthentication, getContext } from './context';
 import { authenticate } from './expo';
 import { install } from './install';
 import { patchWatchers } from './system';
 
 export async function run() {
-	const path = await install(
-		getInput('expo-version') || 'latest',
-		getInput('expo-packager') || 'npm',
-		(getInput('expo-cache') || 'false') === 'true',
-	);
+	const context = getContext();
+	const path = await install(context);
 
 	addPath(path);
 
-	await authenticate(
-		getInput('expo-username'),
-		getInput('expo-password'),
-	);
+	await authenticate(getAuthentication());
 
-	const shouldPatchWatchers = getInput('expo-patch-watchers') || 'true';
-
-	if (shouldPatchWatchers !== 'false') {
+	if (context.patchWatchers) {
 		await patchWatchers();
 	}
 }

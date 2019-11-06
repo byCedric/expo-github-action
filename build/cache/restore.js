@@ -24,22 +24,27 @@ const toolCache = __importStar(require("@actions/tool-cache"));
 const os_1 = __importDefault(require("os"));
 const path_1 = __importDefault(require("path"));
 const api_1 = require("./api");
-function fromCache(version, packager, remoteCache) {
+const utils_1 = require("./utils");
+/**
+ * Restore the context from local or remote cache, when enabled.
+ * It returns the path where the tool was restored, when restored.
+ */
+function fromCache(context) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localCachePath = toolCache.find('expo-cli', version);
-        core.info(`Debug: restoring cache for: ${JSON.stringify({ version, packager })}`);
-        core.info(`Debug: local cache path: ${localCachePath}`);
+        const localCachePath = toolCache.find('expo-cli', context.version);
+        core.info(`cache: restoring for ${JSON.stringify(context)}`);
+        core.info(`cache: local path ${localCachePath}`);
         if (localCachePath) {
             return localCachePath;
         }
-        if (!remoteCache) {
+        if (!context.remoteCache) {
             return;
         }
-        const remoteCacheKey = api_1.getKey(version, packager);
-        const remoteCachePath = path_1.default.join(process.env['RUNNER_TOOL_CACHE'] || '', 'expo-cli', '3.4.1', os_1.default.arch());
+        const remoteCacheKey = utils_1.getKey(context.version, context.packager);
+        const remoteCachePath = path_1.default.join(process.env['RUNNER_TOOL_CACHE'] || '', 'expo-cli', context.version, os_1.default.arch());
         let remoteCacheResponse;
-        core.info(`Debug: remote cache key: ${remoteCacheKey}`);
-        core.info(`Debug: remote cache path: ${remoteCachePath}`);
+        core.info(`cache: remote key ${remoteCacheKey}`);
+        core.info(`cache: remote path ${remoteCachePath}`);
         try {
             remoteCacheResponse = yield api_1.fetchEntry(remoteCacheKey, remoteCachePath);
         }
@@ -49,7 +54,7 @@ function fromCache(version, packager, remoteCache) {
         if (remoteCacheResponse) {
             return remoteCachePath;
         }
-        core.info(`Debug: remote cache response empty`);
+        core.info(`cache: remote response empty`);
     });
 }
 exports.fromCache = fromCache;

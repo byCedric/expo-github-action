@@ -23,17 +23,23 @@ const core = __importStar(require("@actions/core"));
 const toolCache = __importStar(require("@actions/tool-cache"));
 const os_1 = __importDefault(require("os"));
 const api_1 = require("./api");
-function toCache(version, packager, dir, remoteCache) {
+const utils_1 = require("./utils");
+/**
+ * Save the Expo CLI to local and remote cache, when enabled.
+ * It always returns the local cache path, even when saved on remote cache.
+ * When something went wrong, it returns nothing but the output will be set to failed.
+ */
+function toCache(context, dir) {
     return __awaiter(this, void 0, void 0, function* () {
-        const localCachePath = yield toolCache.cacheDir(dir, 'expo-cli', version, os_1.default.arch());
-        core.info(`Debug: saving cache for: ${JSON.stringify({ version, packager, dir })}`);
-        core.info(`Debug: local cache path: ${localCachePath}`);
-        if (!remoteCache) {
+        const localCachePath = yield toolCache.cacheDir(dir, 'expo-cli', context.version, os_1.default.arch());
+        core.info(`cache: saving for ${JSON.stringify(Object.assign(Object.assign({}, context), { dir }))}`);
+        core.info(`cache: local path ${localCachePath}`);
+        if (!context.remoteCache) {
             return;
         }
-        const remoteCachekey = api_1.getKey(version, packager);
+        const remoteCachekey = utils_1.getKey(context.version, context.packager);
         let remoteCacheResponse;
-        core.info(`Debug: remote cache key: ${remoteCachekey}`);
+        core.info(`cache: remote key ${remoteCachekey}`);
         try {
             remoteCacheResponse = yield api_1.storeEntry(remoteCachekey, localCachePath);
         }
@@ -43,7 +49,7 @@ function toCache(version, packager, dir, remoteCache) {
         if (remoteCacheResponse) {
             return localCachePath;
         }
-        core.info('Debug: skipping new cache');
+        core.info('cache: skipping new cache');
     });
 }
 exports.toCache = toCache;

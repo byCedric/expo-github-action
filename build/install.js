@@ -34,24 +34,6 @@ function resolve(version) {
 }
 exports.resolve = resolve;
 /**
- * Install `expo-cli`, by version, using the packager.
- * Here you can provide any semver range or dist tag used in the registry.
- * It returns the path where Expo is installed.
- */
-function install(version, packager, remoteCache) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const exact = yield resolve(version);
-        let root = yield cache_1.fromCache(exact, packager, remoteCache);
-        if (!root) {
-            const installPath = yield fromPackager(exact, packager);
-            const cachePath = yield cache_1.toCache(exact, packager, installPath, remoteCache);
-            root = cachePath || installPath;
-        }
-        return path.join(root, 'node_modules', '.bin');
-    });
-}
-exports.install = install;
-/**
  * Install `expo-cli`, by version, using npm or yarn.
  * It creates a temporary directory to store all required files.
  */
@@ -65,3 +47,21 @@ function fromPackager(version, packager) {
     });
 }
 exports.fromPackager = fromPackager;
+/**
+ * Install `expo-cli`, by version, using the packager.
+ * Here you can provide any semver range or dist tag used in the registry.
+ * It returns the path where Expo is installed.
+ */
+function install(context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const version = yield resolve(context.version);
+        let root = yield cache_1.fromCache(Object.assign(Object.assign({}, context), { version }));
+        if (!root) {
+            const installPath = yield fromPackager(version, context.packager);
+            const cachePath = yield cache_1.toCache(Object.assign(Object.assign({}, context), { version }), installPath);
+            root = cachePath || installPath;
+        }
+        return path.join(root, 'node_modules', '.bin');
+    });
+}
+exports.install = install;

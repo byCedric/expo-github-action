@@ -9,20 +9,20 @@ import { setPlatform, resetPlatform } from './utils';
 
 describe('authenticate', () => {
 	test('skips authentication without credentials', async () => {
-		await expo.authenticate('', '');
+		await expo.authenticate();
 		expect(cli.exec).not.toBeCalled();
 		expect(core.debug).toBeCalled();
 	});
 
 	test('skips authentication without password', async () => {
-		await expo.authenticate('bycedric', '');
+		await expo.authenticate({ username: 'bycedric' });
 		expect(cli.exec).not.toBeCalled();
 		expect(core.debug).toBeCalled();
 	});
 
 	test('executes login command with password through environment', async () => {
 		process.env['TEST_INCLUDED'] = 'hellyeah';
-		await expo.authenticate('bycedric', 'mypassword');
+		await expo.authenticate({ username: 'bycedric',  password: 'mypassword' });
 		expect(cli.exec).toBeCalled();
 		expect(cli.exec.mock.calls[0][0]).toBe('expo');
 		expect(cli.exec.mock.calls[0][1][0]).toBe('login')
@@ -37,7 +37,7 @@ describe('authenticate', () => {
 
 	test('executes login command with `.cmd` suffix on windows', async () => {
 		setPlatform('win32');
-		await expo.authenticate('bycedric', 'mypassword');
+		await expo.authenticate({ username: 'bycedric', password: 'mypassword' });
 		expect(cli.exec).toBeCalled();
 		expect(cli.exec.mock.calls[0][0]).toBe('expo.cmd');
 		resetPlatform();
