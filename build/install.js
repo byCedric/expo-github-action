@@ -38,13 +38,13 @@ exports.resolve = resolve;
  * Here you can provide any semver range or dist tag used in the registry.
  * It returns the path where Expo is installed.
  */
-function install(version, packager) {
+function install(version, packager, remoteCache) {
     return __awaiter(this, void 0, void 0, function* () {
         const exact = yield resolve(version);
-        let root = yield cache_1.fromCache(exact, packager);
+        let root = yield cache_1.fromCache(exact, packager, remoteCache);
         if (!root) {
             const installPath = yield fromPackager(exact, packager);
-            const cachePath = yield cache_1.toCache(exact, packager, installPath);
+            const cachePath = yield cache_1.toCache(exact, packager, installPath, remoteCache);
             root = cachePath || installPath;
         }
         return path.join(root, 'node_modules', '.bin');

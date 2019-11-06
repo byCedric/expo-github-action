@@ -22,3 +22,6 @@ input:
   expo-patch-watchers:
     description: If Expo should fix the default watchers limit, helps with ENOSPC errors. (can be true or false)
     default: true
+  expo-cache:
+    description: If Expo should be cached in your repo. (highly experimental, can be true or false)
+    default: false

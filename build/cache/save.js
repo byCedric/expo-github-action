@@ -23,24 +23,24 @@ const core = __importStar(require("@actions/core"));
 const toolCache = __importStar(require("@actions/tool-cache"));
 const os_1 = __importDefault(require("os"));
 const api_1 = require("./api");
-function toCache(version, packager, dir) {
+function toCache(version, packager, dir, remoteCache) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Debug: saving cache for: ${JSON.stringify({ version, packager, dir })}`);
-        const key = api_1.getKey(version, packager);
-        core.info(`Debug: cache key: ${key}`);
         const localCachePath = yield toolCache.cacheDir(dir, 'expo-cli', version, os_1.default.arch());
+        core.info(`Debug: saving cache for: ${JSON.stringify({ version, packager, dir })}`);
         core.info(`Debug: local cache path: ${localCachePath}`);
+        if (!remoteCache) {
+            return;
+        }
+        const remoteCachekey = api_1.getKey(version, packager);
         let remoteCacheResponse;
+        core.info(`Debug: remote cache key: ${remoteCachekey}`);
         try {
-            remoteCacheResponse = yield api_1.storeEntry(key, localCachePath);
-            core.info(`Debug: remote cache response: ${JSON.stringify(remoteCacheResponse)}`);
+            remoteCacheResponse = yield api_1.storeEntry(remoteCachekey, localCachePath);
         }
         catch (error) {
             core.setFailed(error.message);
-            core.info(`Debug: remote cache failed: ${error.message}`);
         }
         if (remoteCacheResponse) {
-            core.info(`Debug: remote cache saved from local cache path: ${localCachePath}`);
             return localCachePath;
         }
         core.info('Debug: skipping new cache');

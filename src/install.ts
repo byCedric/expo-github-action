@@ -20,13 +20,13 @@ export async function resolve(version: string) {
  * Here you can provide any semver range or dist tag used in the registry.
  * It returns the path where Expo is installed.
  */
-export async function install(version: string, packager: string) {
+export async function install(version: string, packager: string, remoteCache: boolean) {
 	const exact = await resolve(version);
-	let root = await fromCache(exact, packager);
+	let root = await fromCache(exact, packager, remoteCache);
 
 	if (!root) {
 		const installPath = await fromPackager(exact, packager);
-		const cachePath = await toCache(exact, packager, installPath);
+		const cachePath = await toCache(exact, packager, installPath, remoteCache);
 
 		root = cachePath || installPath;
 	}

@@ -89,7 +89,7 @@ function validateArchive(archive: string) {
 	const MAX_SIZE = 400 * 1024 * 1024; // 400mb
 	const archiveSize = fs.statSync(archive).size;
 
-	core.info(`Cache: archive size is ${archiveSize}`);
+	core.info(`Cache: remote cache archive size is ${archiveSize}`);
 
 	if (archiveSize > MAX_SIZE) {
 		throw new Error(errors.ARCHIVE_TOO_BIG + archiveSize);
