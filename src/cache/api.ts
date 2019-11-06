@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import * as io from '@actions/io';
-import * as toolCache from '@actions/tool-cache';
 import fs from 'fs';
 import fetch from 'node-fetch';
 import tar from 'tar';
@@ -37,12 +36,10 @@ export async function fetchEntry(key: string, target: string) {
 		throw new Error(utils.errors.API_ENTRY_NOT_FOUND + key);
 	}
 
-	const archiveDownload = await toolCache.downloadTool(data.archiveLocation);
-	const archivePath = utils.getTemporaryPath('cache.tgz');
+	const archivePath = await utils.downloadArchive(data.archiveLocation);
 
-	await io.mv(archiveDownload, archivePath);
 	await io.mkdirP(target);
-	await toolCache.extractTar(archivePath, target);
+	await tar.extract({ file: archivePath, cwd: target });
 
 	core.saveState(utils.states.CACHE_ENTRY, JSON.stringify(data));
 

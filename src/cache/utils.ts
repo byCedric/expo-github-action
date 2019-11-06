@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import fs from 'fs';
+import fetch from 'node-fetch';
 import path from 'path';
 import os from 'os';
 
@@ -69,7 +70,7 @@ export function getToken() {
  * You can add a filename that's added to the temporary path.
  */
 export function getTemporaryPath(file = '') {
-	return path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'expo-cli')), file);
+	return path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'expo-cli-')), file);
 }
 
 /**
@@ -85,4 +86,23 @@ export function validateArchive(archive: string) {
 	if (archiveSize > MAX_SIZE) {
 		throw new Error(errors.ARCHIVE_TOO_BIG + archiveSize);
 	}
+}
+
+/**
+ * Download an archive using the absolute URL.
+ * It returns a temporary path to the archive file.
+ */
+export async function downloadArchive(url: string) {
+	const path = getTemporaryPath('cache.tgz');
+	const response = await fetch(url);
+
+	await new Promise((resolve, reject) => {
+		const stream = fs.createWriteStream(path);
+
+		response.body.pipe(stream);
+		response.body.on('error', reject);
+		stream.on('finish', resolve);
+	});
+
+	return path;
 }

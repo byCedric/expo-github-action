@@ -21,7 +21,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
 const io = __importStar(require("@actions/io"));
-const toolCache = __importStar(require("@actions/tool-cache"));
 const fs_1 = __importDefault(require("fs"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const tar_1 = __importDefault(require("tar"));
@@ -50,11 +49,9 @@ function fetchEntry(key, target) {
         if (!data || !data.archiveLocation) {
             throw new Error(utils.errors.API_ENTRY_NOT_FOUND + key);
         }
-        const archiveDownload = yield toolCache.downloadTool(data.archiveLocation);
-        const archivePath = utils.getTemporaryPath('cache.tgz');
-        yield io.mv(archiveDownload, archivePath);
+        const archivePath = yield utils.downloadArchive(data.archiveLocation);
         yield io.mkdirP(target);
-        yield toolCache.extractTar(archivePath, target);
+        yield tar_1.default.extract({ file: archivePath, cwd: target });
         core.saveState(utils.states.CACHE_ENTRY, JSON.stringify(data));
         return true;
     });
