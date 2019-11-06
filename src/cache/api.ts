@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import * as io from '@actions/io';
 import * as toolCache from '@actions/tool-cache';
 import fs from 'fs';
 import fetch from 'node-fetch';
@@ -124,6 +125,7 @@ export async function fetchEntry(key: string, target: string): Promise<ArtifactC
 	}
 
 	const archiveFile = await toolCache.downloadTool(data.archiveLocation);
+	await io.mkdirP(target);
 	await toolCache.extractTar(archiveFile, target);
 
 	core.saveState(states.CACHE_ENTRY, JSON.stringify(data));

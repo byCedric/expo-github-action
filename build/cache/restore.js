@@ -46,7 +46,7 @@ function fromCache(version, packager) {
             core.setFailed(error.message);
             core.info(`Debug: remote cache failed: ${error.message}`);
         }
-        if (remoteCacheResponse !== null) {
+        if (!remoteCacheResponse) {
             core.info(`Debug: remote cache restored to ${remoteCachePath}`);
             return remoteCachePath;
         }

@@ -20,6 +20,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(require("@actions/core"));
+const io = __importStar(require("@actions/io"));
 const toolCache = __importStar(require("@actions/tool-cache"));
 const fs_1 = __importDefault(require("fs"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
@@ -116,6 +117,7 @@ function fetchEntry(key, target) {
             throw new Error(exports.errors.API_ENTRY_NOT_FOUND + key);
         }
         const archiveFile = yield toolCache.downloadTool(data.archiveLocation);
+        yield io.mkdirP(target);
         yield toolCache.extractTar(archiveFile, target);
         core.saveState(exports.states.CACHE_ENTRY, JSON.stringify(data));
         return data;
