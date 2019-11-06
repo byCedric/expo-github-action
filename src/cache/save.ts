@@ -24,7 +24,7 @@ export async function toCache(version: string, packager: string, dir: string) {
 		core.info(`Debug: remote cache failed: ${error.message}`);
 	}
 
-	if (remoteCacheResponse !== null) {
+	if (remoteCacheResponse) {
 		core.info(`Debug: remote cache saved from local cache path: ${localCachePath}`);
 		return localCachePath;
 	}

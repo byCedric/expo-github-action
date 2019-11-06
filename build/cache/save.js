@@ -39,7 +39,7 @@ function toCache(version, packager, dir) {
             core.setFailed(error.message);
             core.info(`Debug: remote cache failed: ${error.message}`);
         }
-        if (remoteCacheResponse !== null) {
+        if (remoteCacheResponse) {
             core.info(`Debug: remote cache saved from local cache path: ${localCachePath}`);
             return localCachePath;
         }

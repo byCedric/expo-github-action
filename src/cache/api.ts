@@ -125,6 +125,7 @@ export async function fetchEntry(key: string, target: string): Promise<ArtifactC
 	}
 
 	const archiveFile = await toolCache.downloadTool(data.archiveLocation);
+
 	await io.mkdirP(target);
 	await toolCache.extractTar(archiveFile, target);
 
