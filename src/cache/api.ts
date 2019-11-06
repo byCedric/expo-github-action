@@ -39,7 +39,7 @@ export const states = {
 export function getKey(version: string, packager: string) {
 	const node = process.version.split('.')[0];
 
-	return `${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+	return `T1-${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 
 /**
@@ -89,6 +89,8 @@ function validateArchive(archive: string) {
 	const MAX_SIZE = 400 * 1024 * 1024; // 400mb
 	const archiveSize = fs.statSync(archive).size;
 
+	core.info(`Cache: archive size is ${archiveSize}`);
+
 	if (archiveSize > MAX_SIZE) {
 		throw new Error(errors.ARCHIVE_TOO_BIG + archiveSize);
 	}
@@ -135,7 +137,7 @@ export async function fetchEntry(key: string, target: string): Promise<ArtifactC
 }
 
 /**
- * Store a directory or file in the cache API.
+ * Store a directory in the cache API.
  * This allows us to fetch a cache entry from another workflow run.
  */
 export async function storeEntry(key: string, target: string): Promise<ArtifactCacheEntry> {
@@ -148,7 +150,7 @@ export async function storeEntry(key: string, target: string): Promise<ArtifactC
 
 	const archivePath = path.join(getTemporaryPath(), 'cache.tgz');
 
-	await tar.create({ gzip: true, file: archivePath }, [target]);
+	await tar.create({ gzip: true, file: archivePath, cwd: target }, ['node_modules']);
 	await validateArchive(archivePath);
 
 	const response = await fetch(

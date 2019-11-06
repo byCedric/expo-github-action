@@ -49,7 +49,7 @@ exports.states = {
  */
 function getKey(version, packager) {
     const node = process.version.split('.')[0];
-    return `${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+    return `T1-${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 exports.getKey = getKey;
 /**
@@ -89,6 +89,7 @@ function getTemporaryPath() {
 function validateArchive(archive) {
     const MAX_SIZE = 400 * 1024 * 1024; // 400mb
     const archiveSize = fs_1.default.statSync(archive).size;
+    core.info(`Cache: archive size is ${archiveSize}`);
     if (archiveSize > MAX_SIZE) {
         throw new Error(exports.errors.ARCHIVE_TOO_BIG + archiveSize);
     }
@@ -125,7 +126,7 @@ function fetchEntry(key, target) {
 }
 exports.fetchEntry = fetchEntry;
 /**
- * Store a directory or file in the cache API.
+ * Store a directory in the cache API.
  * This allows us to fetch a cache entry from another workflow run.
  */
 function storeEntry(key, target) {
@@ -136,7 +137,7 @@ function storeEntry(key, target) {
             return cacheEntry;
         }
         const archivePath = path_1.default.join(getTemporaryPath(), 'cache.tgz');
-        yield tar_1.default.create({ gzip: true, file: archivePath }, [target]);
+        yield tar_1.default.create({ gzip: true, file: archivePath, cwd: target }, ['node_modules']);
         yield validateArchive(archivePath);
         const response = yield node_fetch_1.default(getUrl(`_apis/artifactcache/cache/${encodeURIComponent(key)}`), {
             body: fs_1.default.createReadStream(archivePath),
