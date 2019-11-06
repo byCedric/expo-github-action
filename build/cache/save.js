@@ -43,7 +43,7 @@ function toCache(version, packager, dir) {
             core.info(`Debug: remote cache saved from local cache path: ${localCachePath}`);
             return localCachePath;
         }
-        core.info(`Debug: remote cache response empty`);
+        core.info('Debug: skipping new cache');
     });
 }
 exports.toCache = toCache;

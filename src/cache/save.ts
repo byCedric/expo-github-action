@@ -29,5 +29,5 @@ export async function toCache(version: string, packager: string, dir: string) {
 		return localCachePath;
 	}
 
-	core.info(`Debug: remote cache response empty`);
+	core.info('Debug: skipping new cache');
 }

@@ -39,7 +39,7 @@ export const states = {
 export function getKey(version: string, packager: string) {
 	const node = process.version.split('.')[0];
 
-	return `T2-${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+	return `T3-${process.platform}-${os.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 
 /**
@@ -100,7 +100,7 @@ function validateArchive(archive: string) {
  * Fetch the cache entry, based on the key, from the cache API.
  * This allows us to fetch a cache entry from another workflow run.
  */
-export async function fetchEntry(key: string, target: string): Promise<ArtifactCacheEntry | null> {
+export async function fetchEntry(key: string, target: string) {
 	const response = await fetch(
 		getUrl(`_apis/artifactcache/cache?keys=${encodeURIComponent(key)}`),
 		{
@@ -113,7 +113,7 @@ export async function fetchEntry(key: string, target: string): Promise<ArtifactC
 	);
 
 	if (response.status === 204) {
-		return null;
+		return false;
 	}
 
 	if (response.status !== 200) {
@@ -133,19 +133,19 @@ export async function fetchEntry(key: string, target: string): Promise<ArtifactC
 
 	core.saveState(states.CACHE_ENTRY, JSON.stringify(data));
 
-	return data;
+	return true;
 }
 
 /**
  * Store a directory in the cache API.
  * This allows us to fetch a cache entry from another workflow run.
  */
-export async function storeEntry(key: string, target: string): Promise<ArtifactCacheEntry> {
+export async function storeEntry(key: string, target: string) {
 	const cacheEntryRaw = core.getState(states.CACHE_ENTRY);
 	const cacheEntry = cacheEntryRaw ? JSON.parse(cacheEntryRaw) : null;
 
 	if (cacheEntry) {
-		return cacheEntry;
+		return false;
 	}
 
 	const archivePath = path.join(getTemporaryPath(), 'cache.tgz');
@@ -174,21 +174,5 @@ export async function storeEntry(key: string, target: string): Promise<ArtifactC
 		throw new Error(errors.API_ERROR + response.status);
 	}
 
-	let data;
-	try {
-		data = await response.json();
-	} catch (error) {
-		core.info('Debug: response failed to parse to json');
-		try {
-			core.info(await response.text());
-		} catch (error) {
-			core.info('Debug: response failed to reading to text');
-		}
-	}
-
-	if (!data || !data.archiveLocation) {
-		throw new Error(errors.API_ENTRY_NOT_FOUND + key);
-	}
-
-	return data;
+	return true;
 }

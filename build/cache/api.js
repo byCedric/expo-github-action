@@ -49,7 +49,7 @@ exports.states = {
  */
 function getKey(version, packager) {
     const node = process.version.split('.')[0];
-    return `T2-${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
+    return `T3-${process.platform}-${os_1.default.arch()}-node-${node}-${packager}-expo-cli-${version}`;
 }
 exports.getKey = getKey;
 /**
@@ -108,7 +108,7 @@ function fetchEntry(key, target) {
             },
         });
         if (response.status === 204) {
-            return null;
+            return false;
         }
         if (response.status !== 200) {
             throw new Error(exports.errors.API_ERROR + response.status);
@@ -121,7 +121,7 @@ function fetchEntry(key, target) {
         yield io.mkdirP(target);
         yield toolCache.extractTar(archiveFile, target);
         core.saveState(exports.states.CACHE_ENTRY, JSON.stringify(data));
-        return data;
+        return true;
     });
 }
 exports.fetchEntry = fetchEntry;
@@ -134,7 +134,7 @@ function storeEntry(key, target) {
         const cacheEntryRaw = core.getState(exports.states.CACHE_ENTRY);
         const cacheEntry = cacheEntryRaw ? JSON.parse(cacheEntryRaw) : null;
         if (cacheEntry) {
-            return cacheEntry;
+            return false;
         }
         const archivePath = path_1.default.join(getTemporaryPath(), 'cache.tgz');
         yield tar_1.default.create({ gzip: true, file: archivePath, cwd: target }, ['node_modules']);
@@ -154,23 +154,7 @@ function storeEntry(key, target) {
         if (response.status !== 200) {
             throw new Error(exports.errors.API_ERROR + response.status);
         }
-        let data;
-        try {
-            data = yield response.json();
-        }
-        catch (error) {
-            core.info('Debug: response failed to parse to json');
-            try {
-                core.info(yield response.text());
-            }
-            catch (error) {
-                core.info('Debug: response failed to reading to text');
-            }
-        }
-        if (!data || !data.archiveLocation) {
-            throw new Error(exports.errors.API_ENTRY_NOT_FOUND + key);
-        }
-        return data;
+        return true;
     });
 }
 exports.storeEntry = storeEntry;
